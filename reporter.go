@@ -77,7 +77,7 @@ func (r *Reporter) Run() (*Reporter, error) {
 		}
 
 		if err := rows.Scan(valuePtrs...); err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		dataRow := make(map[string]interface{})
