@@ -6,24 +6,27 @@ import (
 )
 
 type Reporter struct {
-	connection  *sql.DB
-	query       string
-	params      []interface{}
-	processes   []func(map[string]interface{})
-	rows        []map[string]interface{}
-	columnTypes map[string]string
-	visualise   func([]map[string]interface{}, map[string]string) string
+	connection *sql.DB
+	query      string
+	params     []interface{}
+	processes  []func(map[string]interface{})
+	rows       []map[string]interface{}
+	columnDefs []map[string]interface{}
+	visualise  func([]map[string]interface{}, []map[string]interface{}) string
 }
 
-func tableVisualiser(rows []map[string]interface{}, columnTypes map[string]string) string {
+func tableVisualiser(rows []map[string]interface{}, columnDefs []map[string]interface{}) string {
 	html := "<table><thead><tr>"
-	for key := range rows[0] {
-		html += "<th>" + key + "</th>"
+	for col := range columnDefs {
+		label := columnDefs[col]["label"].(string)
+		html += "<th>" + label + "</th>"
 	}
 	html += "</tr></thead><tbody>"
 	for _, row := range rows {
 		html += "<tr>"
-		for _, value := range row {
+		for col := range columnDefs {
+			key := columnDefs[col]["key"].(string)
+			value := row[key]
 			html += fmt.Sprintf("<td>%v</td>", value)
 		}
 		html += "</tr>"
@@ -39,7 +42,7 @@ func NewReporter(db *sql.DB) (*Reporter, error) {
 	}, nil
 }
 
-func (r *Reporter) Visualise(visualise func([]map[string]interface{}, map[string]string) string) *Reporter {
+func (r *Reporter) Visualise(visualise func([]map[string]interface{}, []map[string]interface{}) string) *Reporter {
 	r.visualise = visualise
 	return r
 }
@@ -50,7 +53,6 @@ func (r *Reporter) Params(params []interface{}) *Reporter {
 }
 
 func (r *Reporter) Run() (*Reporter, error) {
-	r.columnTypes = make(map[string]string)
 	rows, err := r.connection.Query(r.query, r.params...)
 	if err != nil {
 		return nil, err
@@ -62,17 +64,12 @@ func (r *Reporter) Run() (*Reporter, error) {
 		return nil, err
 	}
 
-	columnTypes, err := rows.ColumnTypes()
-	if err != nil {
-		return nil, err
-	}
 	valuePtrs := make([]interface{}, len(columns))
 
 	// Process each row
 	for rows.Next() {
 		values := make([]interface{}, len(columns))
 		for i := range columns {
-			r.columnTypes[columns[i]] = columnTypes[i].DatabaseTypeName()
 			valuePtrs[i] = &values[i]
 		}
 
@@ -113,5 +110,10 @@ func (r *Reporter) Process(process func(map[string]interface{})) *Reporter {
 }
 
 func (r *Reporter) Output(format string) string {
-	return r.visualise(r.rows, r.columnTypes)
+	return r.visualise(r.rows, r.columnDefs)
+}
+
+func (r *Reporter) Columns(columnDefs []map[string]interface{}) *Reporter {
+	r.columnDefs = columnDefs
+	return r
 }

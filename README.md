@@ -33,10 +33,10 @@ Multiple calls to `Process` can be changed with each call mutating the row data.
 By default data is output as an html table.  Other output formats can be added by creating a function with the signature:
 
 ```go
-func([]map[string]interface{}, map[string]string) string
+func([]map[string]interface{}, map[string]interface{}) string
 ```
 
-the first parameter will be the data the second paramater will be all the column definitions.  The function should return a string representing the oputput.
+the first parameter will be the data the second paramter will be all the column definitions.  The function should return a string representing the oputput.
 
 These can be added to the reporter by calling `rr.Visualise(thefunction)`
 
