@@ -11,21 +11,25 @@ type Reporter struct {
 	params     []interface{}
 	processes  []func(map[string]interface{})
 	rows       []map[string]interface{}
-	columnDefs []map[string]interface{}
-	visualise  func([]map[string]interface{}, []map[string]interface{}) string
+	columnDefs []ReportColumn
+	visualise  func([]map[string]interface{}, []ReportColumn) string
+}
+type ReportColumn struct {
+	Label string
+	Key   string
 }
 
-func tableVisualiser(rows []map[string]interface{}, columnDefs []map[string]interface{}) string {
+func tableVisualiser(rows []map[string]interface{}, columnDefs []ReportColumn) string {
 	html := "<table><thead><tr>"
 	for col := range columnDefs {
-		label := columnDefs[col]["label"].(string)
+		label := columnDefs[col].Label
 		html += "<th>" + label + "</th>"
 	}
 	html += "</tr></thead><tbody>"
 	for _, row := range rows {
 		html += "<tr>"
 		for col := range columnDefs {
-			key := columnDefs[col]["key"].(string)
+			key := columnDefs[col].Key
 			value := row[key]
 			html += fmt.Sprintf("<td>%v</td>", value)
 		}
@@ -42,7 +46,7 @@ func NewReporter(db *sql.DB) (*Reporter, error) {
 	}, nil
 }
 
-func (r *Reporter) Visualise(visualise func([]map[string]interface{}, []map[string]interface{}) string) *Reporter {
+func (r *Reporter) Visualise(visualise func([]map[string]interface{}, []ReportColumn) string) *Reporter {
 	r.visualise = visualise
 	return r
 }
@@ -113,7 +117,7 @@ func (r *Reporter) Output(format string) string {
 	return r.visualise(r.rows, r.columnDefs)
 }
 
-func (r *Reporter) Columns(columnDefs []map[string]interface{}) *Reporter {
+func (r *Reporter) Columns(columnDefs []ReportColumn) *Reporter {
 	r.columnDefs = columnDefs
 	return r
 }
