@@ -131,3 +131,41 @@ func TestTableVisualiser(t *testing.T) {
 	result := tableVisualiser(rows, columnDefs)
 	assert.Equal(t, expectedOutput, result)
 }
+
+func TestTableVisualiser_MixedTypes(t *testing.T) {
+	columnDefs := []ReportColumn{
+		{Label: "ID", Key: "id", ShowTotal: false},
+		{Label: "Amount", Key: "amount", ShowTotal: true},
+		{Label: "Name", Key: "name", ShowTotal: false},
+	}
+
+	rows := []map[string]interface{}{
+		{"id": int64(1), "amount": float64(100.5), "name": "John"},
+		{"id": int64(2), "amount": int64(50), "name": "Jane"},
+		{"id": int64(3), "amount": float64(200.25), "name": "Doe"},
+	}
+
+	expectedOutput := `<table><thead><tr><th>ID</th><th>Amount</th><th>Name</th></tr></thead><tbody><tr><td>1</td><td>100.5</td><td>John</td></tr><tr><td>2</td><td>50</td><td>Jane</td></tr><tr><td>3</td><td>200.25</td><td>Doe</td></tr></tbody><tfoot><tr><td></td><td>350.75</td><td></td></tr></tfoot></table>`
+
+	result := tableVisualiser(rows, columnDefs)
+	assert.Equal(t, expectedOutput, result)
+}
+
+func TestTableVisualiser_IncorrectAmountString(t *testing.T) {
+	columnDefs := []ReportColumn{
+		{Label: "ID", Key: "id", ShowTotal: false},
+		{Label: "Amount", Key: "amount", ShowTotal: true},
+		{Label: "Name", Key: "name", ShowTotal: false},
+	}
+
+	rows := []map[string]interface{}{
+		{"id": int64(1), "amount": float64(100.5), "name": "John"},
+		{"id": int64(2), "amount": "invalid", "name": "Jane"}, // Incorrect amount as string
+		{"id": int64(3), "amount": float64(200.25), "name": "Doe"},
+	}
+
+	expectedOutput := `<table><thead><tr><th>ID</th><th>Amount</th><th>Name</th></tr></thead><tbody><tr><td>1</td><td>100.5</td><td>John</td></tr><tr><td>2</td><td>invalid</td><td>Jane</td></tr><tr><td>3</td><td>200.25</td><td>Doe</td></tr></tbody><tfoot><tr><td></td><td>300.75</td><td></td></tr></tfoot></table>`
+
+	result := tableVisualiser(rows, columnDefs)
+	assert.Equal(t, expectedOutput, result)
+}
