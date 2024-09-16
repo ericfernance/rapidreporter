@@ -6,24 +6,31 @@ import (
 )
 
 type Reporter struct {
-	connection *sql.DB
-	query      string
-	params     []interface{}
-	processes  []func(map[string]interface{})
-	rows       []map[string]interface{}
-	columnDefs []ReportColumn
-	visualise  func([]map[string]interface{}, []ReportColumn) string
+	connection   *sql.DB
+	query        string
+	params       []interface{}
+	rowProcesses []func(map[string]interface{})
+	rows         []map[string]interface{}
+	columnDefs   []ReportColumn
+	visualise    func([]map[string]interface{}, []ReportColumn) string
 }
 type ReportColumn struct {
-	Label string
-	Key   string
+	Label     string
+	Key       string
+	ShowTotal bool
 }
 
 func tableVisualiser(rows []map[string]interface{}, columnDefs []ReportColumn) string {
 	html := "<table><thead><tr>"
+	showFooter := false
+	totals := make(map[string]float64)
 	for col := range columnDefs {
 		label := columnDefs[col].Label
 		html += "<th>" + label + "</th>"
+		if columnDefs[col].ShowTotal {
+			showFooter = true
+			totals[label] = 0
+		}
 	}
 	html += "</tr></thead><tbody>"
 	for _, row := range rows {
@@ -32,10 +39,33 @@ func tableVisualiser(rows []map[string]interface{}, columnDefs []ReportColumn) s
 			key := columnDefs[col].Key
 			value := row[key]
 			html += fmt.Sprintf("<td>%v</td>", value)
+			if columnDefs[col].ShowTotal {
+				floatval, ok := value.(float64)
+				if !ok {
+					floatval = float64(value.(int64))
+				}
+				totals[columnDefs[col].Label] += floatval
+			}
 		}
 		html += "</tr>"
 	}
-	html += "</tbody></table>"
+	html += "</tbody>"
+
+	// Add the footer row
+	if showFooter {
+		html += "<tfoot><tr>"
+		for col := range columnDefs {
+			label := columnDefs[col].Label
+			if columnDefs[col].ShowTotal {
+				html += fmt.Sprintf("<td>%v</td>", totals[label])
+			} else {
+				html += "<td></td>"
+			}
+		}
+		html += "</tr></tfoot>"
+	}
+
+	html += "</table>"
 	return html
 }
 
@@ -94,7 +124,7 @@ func (r *Reporter) Run() (*Reporter, error) {
 		}
 
 		// Process the rows through any user defined processes
-		for _, process := range r.processes {
+		for _, process := range r.rowProcesses {
 			process(dataRow)
 		}
 
@@ -108,8 +138,8 @@ func (r *Reporter) Query(query string) *Reporter {
 	return r
 }
 
-func (r *Reporter) Process(process func(map[string]interface{})) *Reporter {
-	r.processes = append(r.processes, process)
+func (r *Reporter) RowProcess(process func(map[string]interface{})) *Reporter {
+	r.rowProcesses = append(r.rowProcesses, process)
 	return r
 }
 

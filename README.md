@@ -1,4 +1,4 @@
-This project is a basic report builder for Go.  It is inspired by KoolReport in the PHP world.
+This project is a basic report builder for Go.  It is inspired by KoolReport in PHP.
 
 Sample usage:
 
@@ -18,7 +18,7 @@ if err != nil {
 rr, _ := rapidreporter.NewReporter(db)
 rr.Query("SELECT id,first_name,last_name FROM clients where id = ?")
 rr.Params([]interface{}{1})
-rr.Process(func(row map[string]interface{}) {
+rr.RowProcess(func(row map[string]interface{}) {
     row["full_name"] = fmt.Sprintf("%s %s", row["first_name"], row["last_name"])
 })
 rr.Columns([]rapidreporter.ReportColumn{
@@ -34,7 +34,7 @@ fmt.Println(output)
 ```
 
 
-Multiple calls to `Process` can be changed with each call mutating the row data.
+Multiple calls to `RowProcess` can be changed with each call mutating the row data.
 
 By default data is output as an html table.  Other output formats can be added by creating a function with the signature:
 
