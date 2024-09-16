@@ -1,5 +1,15 @@
 This project is a basic report builder for Go.  It is inspired by KoolReport in PHP.
 
+### Installation
+
+To install the package, run:
+
+```bash
+go get github.com/ericfernance/rapidreporter
+```
+
+
+### Usage
 Sample usage:
 
 ```go
@@ -62,3 +72,24 @@ A visualiser can be added to the reporter by calling `rr.Visualise(thefunction)`
 
 
 
+### Advanced Usage
+
+To customize the visualization output, you can pass a custom visualizer function:
+
+```go
+reporter.Visualise(func(rows []map[string]interface{}, cols []ReportColumn) string {
+    // Custom visualization logic here
+    return "custom report"
+})
+```
+
+This allows you to adapt the output format as per your requirements.
+
+### Running Tests
+To run the tests, use the following command:
+
+```bash
+go test ./...
+```
+
+Ensure you have sqlmock installed for proper test execution.
