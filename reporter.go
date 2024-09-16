@@ -40,11 +40,14 @@ func tableVisualiser(rows []map[string]interface{}, columnDefs []ReportColumn) s
 			value := row[key]
 			html += fmt.Sprintf("<td>%v</td>", value)
 			if columnDefs[col].ShowTotal {
-				floatval, ok := value.(float64)
-				if !ok {
-					floatval = float64(value.(int64))
+				switch v := value.(type) {
+				case int64:
+					totals[columnDefs[col].Label] += float64(v)
+				case float64:
+					totals[columnDefs[col].Label] += v
+				default:
+					totals[columnDefs[col].Label] += 0
 				}
-				totals[columnDefs[col].Label] += floatval
 			}
 		}
 		html += "</tr>"

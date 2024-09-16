@@ -48,13 +48,17 @@ The column definitions are expected as structs of type `ReportColumn` These are 
 
 ```go
 type ReportColumn struct {
-	Label string
-	Key   string
+    Label string
+    Key   string
+    ShowTotal bool
 }
 ```
 
+Where one or more columns have the `ShowTotal` flag set to true, the default visualiser output will include a total row at the end of the data.
 
-These can be added to the reporter by calling `rr.Visualise(thefunction)`
+It is the reponsibility of the visualiser to handle the `ShowTotal` flag.
+
+A visualiser can be added to the reporter by calling `rr.Visualise(thefunction)`.  Only one visualiser can be added.
 
 
 
