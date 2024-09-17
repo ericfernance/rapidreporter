@@ -74,6 +74,8 @@ A visualiser can be added to the reporter by calling `rr.Visualise(thefunction)`
 
 ### Advanced Usage
 
+#### Customising the output
+
 To customize the visualization output, you can pass a custom visualizer function:
 
 ```go
@@ -84,6 +86,33 @@ reporter.Visualise(func(rows []map[string]interface{}, cols []ReportColumn) stri
 ```
 
 This allows you to adapt the output format as per your requirements.
+
+#### Defining reports using the DSL
+
+You can define reports using the DSL as shown below.
+
+```
+report "customer report" {
+query "select first_name, last_name from invoices where business_id = ?" 
+params [
+	"businessId"
+	"userId"
+	"startDate"
+]
+processes [
+	"full_name" first_name last_name +
+	"total" quantity price *
+]
+columns [
+	label "First Name" key "first_name"
+	label "Last Name" key "last_name"
+]
+}
+```
+
+
+
+
 
 ### Running Tests
 To run the tests, use the following command:
